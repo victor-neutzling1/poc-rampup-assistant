@@ -1,0 +1,6 @@
+openai>=1.0   # DeepSeek's API is OpenAI-compatible
+fastapi>=0.115
+uvicorn>=0.30
+numpy>=2.0
+fastembed>=0.9
+python-dotenv>=1.0

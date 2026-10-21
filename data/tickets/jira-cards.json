@@ -1,0 +1,155 @@
+[
+  {
+    "id": "IT-1042",
+    "title": "Cannot clone repos: 'ERROR: Repository not found'",
+    "type": "Service Request",
+    "status": "Done",
+    "assignee": "Bianca Rossi (IT Support Specialist)",
+    "description": "New engineer, SSH key added to GitHub, but `git clone git@github.com:larderly/stock-service.git` fails with 'Repository not found'. Teammates can clone the same repo.",
+    "resolution": "The SSH key was not authorized for the larderly org's SSO. In GitHub → Settings → SSH and GPG keys, click 'Configure SSO' next to the key and authorize larderly. Cloning worked right after."
+  },
+  {
+    "id": "IT-1077",
+    "title": "GitHub org invite expired",
+    "type": "Service Request",
+    "status": "Done",
+    "assignee": "Bianca Rossi (IT Support Specialist)",
+    "description": "Started two weeks ago, was on leave in the first week, the GitHub invite link now says it expired.",
+    "resolution": "Invites expire after 7 days. IT re-sent the invite from the Okta GitHub app; accepted the same day. If this happens, post in #it-helpdesk and ask for a re-invite."
+  },
+  {
+    "id": "PLAT-388",
+    "title": "pip install fails with 403 from packages.larderly.example",
+    "type": "Bug",
+    "status": "Done",
+    "assignee": "Leo Novak (Platform Engineer)",
+    "description": "`pip install -r requirements.txt` in orders-service fails on larderly-common with HTTP 403 Forbidden. Worked last month.",
+    "resolution": "Registry tokens expire every 30 days. Running `ladle auth login` refreshed ~/.pypirc and the install worked. We added a clearer error message to Ladle that suggests re-running the login."
+  },
+  {
+    "id": "PLAT-402",
+    "title": "Kafka container restarts in a loop with `ladle up`",
+    "type": "Bug",
+    "status": "Done",
+    "assignee": "Leo Novak (Platform Engineer)",
+    "description": "On a new MacBook, the redpanda container keeps restarting, exit code 137. Stock service then fails to connect to localhost:9092.",
+    "resolution": "Exit code 137 means the container was killed for using too much memory. Docker Desktop was set to the default 4 GB. Raised it to 8 GB in Settings → Resources and the stack came up. The local stack needs at least 6 GB."
+  },
+  {
+    "id": "WEB-731",
+    "title": "Counter web app fails to start: 'Unsupported engine' for Node 18",
+    "type": "Bug",
+    "status": "Done",
+    "assignee": "Oliver Grant (Frontend Engineer, Counter Web)",
+    "description": "Following the dev environment setup page, installed Node 18. Running `npm install` in counter-web prints 'Unsupported engine: wanted node >=20' and `npm run dev` fails with a Vite error.",
+    "resolution": "Counter Web and Whisk moved to Node 20 in March when we upgraded Vite. Run `nvm install 20 && nvm use 20`; there is an `.nvmrc` in the repo, so `nvm use` alone picks the right version. The setup page still says Node 18 and needs updating."
+  },
+  {
+    "id": "STK-519",
+    "title": "`ladle seed` fails: relation \"venues\" does not exist",
+    "type": "Bug",
+    "status": "Done",
+    "assignee": "Ravi Patel (Senior Engineer, Stock)",
+    "description": "Fresh clone of stock-service, `ladle up` works, `ladle seed` crashes with psycopg error relation \"venues\" does not exist.",
+    "resolution": "Migrations had not been applied to the new database. Ran `ladle migrate` and then `ladle seed`. Since Ladle 2.4, `ladle up` runs migrations automatically, so update Ladle with `brew upgrade ladle` / `scoop update ladle`."
+  },
+  {
+    "id": "STK-533",
+    "title": "Integration tests time out connecting to Postgres on WSL2",
+    "type": "Bug",
+    "status": "Done",
+    "assignee": "Ravi Patel (Senior Engineer, Stock)",
+    "description": "On Windows with WSL2, `ladle test --integration` times out connecting to Postgres. Unit tests pass.",
+    "resolution": "The repo was cloned under /mnt/c/ (the Windows filesystem), which makes Docker volume mounts very slow. Moved the code to the WSL home directory (~/code) and the tests ran normally. Always keep code inside the WSL filesystem."
+  },
+  {
+    "id": "ORD-288",
+    "title": "Autopilot creates no draft POs in local environment",
+    "type": "Bug",
+    "status": "Done",
+    "assignee": "Yuki Tanaka (Senior Engineer, Orders)",
+    "description": "Testing Autopilot locally: set a SKU below PAR in stock-service, but no draft purchase order shows up in orders-service.",
+    "resolution": "Only stock-service was running. Autopilot lives in orders-service and listens to the stock.below_par event, so both services must be up: `ladle up --with orders-service`. Also check the `autopilot-enabled` flag is on for the demo venue in local LaunchDarkly settings."
+  },
+  {
+    "id": "ORD-301",
+    "title": "PR blocked: 'migration requires Platform approval'",
+    "type": "Task",
+    "status": "Done",
+    "assignee": "Yuki Tanaka (Senior Engineer, Orders)",
+    "description": "PR adding a column to purchase_orders has one approval from a code owner but the merge button is still blocked.",
+    "resolution": "PRs that touch database migrations need a second approval from the Platform team (CODEOWNERS rule on /migrations). Requested a review from @larderly/platform and it was approved the same day."
+  },
+  {
+    "id": "PLAT-415",
+    "title": "Cannot see production logs in Datadog",
+    "type": "Service Request",
+    "status": "Done",
+    "assignee": "Priya Raman (Tech Lead, Platform)",
+    "description": "Datadog shows dev and staging logs but nothing for env:prod.",
+    "resolution": "Production log access is only granted after completing the 'Secure Development Basics' course. Completed it in the learning portal; access was added automatically the next morning."
+  },
+  {
+    "id": "IT-1103",
+    "title": "Tailscale connected but pantry.larderly.example does not load",
+    "type": "Service Request",
+    "status": "Done",
+    "assignee": "Felipe Moreira (IT Lead)",
+    "description": "Tailscale says connected, but Pantry and the package registry time out in the browser.",
+    "resolution": "The laptop was still using a custom DNS server configured by a home router app, which overrode Tailscale's MagicDNS. Enabled 'Use Tailscale DNS settings' in the Tailscale menu and everything resolved."
+  },
+  {
+    "id": "WEB-744",
+    "title": "Whisk components render without styles in Counter",
+    "type": "Bug",
+    "status": "Done",
+    "assignee": "Mei Lin Tan (Tech Lead, Counter Web)",
+    "description": "After linking a local Whisk build into counter-web, buttons and inputs show without any styling.",
+    "resolution": "The Whisk CSS must be imported once in the app entry point: `import '@larderly/whisk/styles.css'` in main.tsx. When using a local build with `npm link`, also run `npm run build` in whisk first, since the styles are generated at build time."
+  },
+  {
+    "id": "PLAT-430",
+    "title": "Hotfix deployed on a Friday without release note",
+    "type": "Task",
+    "status": "Done",
+    "assignee": "Daniel Hughes (Engineering Manager, Platform)",
+    "description": "A hotfix went to production on Friday and support did not know what changed.",
+    "resolution": "Reminder of the process: hotfixes can skip bake time and the no-Friday rule, but the release captain must post a note in #releases explaining what was fixed and why it could not wait. Added a checklist item to the hotfix PR template."
+  },
+  {
+    "id": "MOB-205",
+    "title": "Kitchen app on Android emulator cannot reach local gateway",
+    "type": "Bug",
+    "status": "Done",
+    "assignee": "Kwame Mensah (Tech Lead, Kitchen Mobile)",
+    "description": "Running kitchen-mobile on the Android emulator, all API calls to http://localhost:8080 fail with network error.",
+    "resolution": "Inside the Android emulator, localhost is the emulator itself. Use http://10.0.2.2:8080 instead; set API_URL=http://10.0.2.2:8080 in kitchen-mobile/.env.local. The iOS simulator can use localhost."
+  },
+  {
+    "id": "IT-1120",
+    "title": "Docker Desktop asks for a paid subscription",
+    "type": "Service Request",
+    "status": "Done",
+    "assignee": "Bianca Rossi (IT Support Specialist)",
+    "description": "Docker Desktop shows 'Sign in required, your organization requires a subscription'.",
+    "resolution": "Sign in to Docker Desktop with the work Okta account, not a personal Docker Hub account. The licence is assigned automatically to work accounts."
+  },
+  {
+    "id": "PLAT-447",
+    "title": "Request: kubectl access to the staging cluster",
+    "type": "Service Request",
+    "status": "In Progress",
+    "assignee": "Leo Novak (Platform Engineer)",
+    "description": "Need to debug a pod in staging, how do I get kubectl access?",
+    "resolution": ""
+  },
+  {
+    "id": "IT-1131",
+    "title": "Second monitor for home office",
+    "type": "Service Request",
+    "status": "To Do",
+    "assignee": "Felipe Moreira (IT Lead)",
+    "description": "Would like a second monitor shipped to my home address.",
+    "resolution": ""
+  }
+]

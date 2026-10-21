@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ramp-Up Assistant</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --text: #1b1f24; --muted: #5f6b7a; --border: #dde2e8;
+    --accent: #0b5cad; --accent-soft: #e6f0fa; --warn: #a15c00; --warn-soft: #fff4e0; --ok: #1d7a46;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151a; --panel: #1b2027; --text: #e6e9ed; --muted: #95a1b0; --border: #2c333d;
+      --accent: #6aa8ec; --accent-soft: #1d2b3c; --warn: #f0b35a; --warn-soft: #33270f; --ok: #5cc98b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
+  header { display: flex; align-items: center; gap: 16px; padding: 12px 20px; border-bottom: 1px solid var(--border); background: var(--panel); }
+  header h1 { font-size: 17px; margin: 0; }
+  #status { font-size: 12px; color: var(--muted); margin-left: auto; }
+  nav button { border: 0; background: none; color: var(--muted); padding: 6px 10px; border-radius: 6px; cursor: pointer; font: inherit; }
+  nav button.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  main { max-width: 860px; margin: 0 auto; padding: 20px 16px 120px; }
+  .hidden { display: none !important; }
+  .msg { margin: 14px 0; }
+  .q { background: var(--accent); color: #fff; padding: 8px 12px; border-radius: 12px 12px 2px 12px; margin-left: auto; width: fit-content; max-width: 80%; }
+  .a { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; }
+  .a p { margin: 0 0 8px; }
+  .a code { background: var(--bg); padding: 1px 4px; border-radius: 4px; font-size: 13px; }
+  .cite { display: inline-block; margin: 0 1px; font-size: 11px; font-weight: 600; background: var(--accent-soft); color: var(--accent); border-radius: 4px; padding: 0 5px; cursor: pointer; }
+  .gapnote { margin-top: 10px; padding: 8px 10px; background: var(--warn-soft); color: var(--warn); border-radius: 8px; font-size: 13px; }
+  details { margin-top: 10px; font-size: 13px; }
+  summary { cursor: pointer; color: var(--muted); }
+  .src { border-top: 1px solid var(--border); padding: 8px 0; }
+  .src.cited .stitle { color: var(--accent); font-weight: 600; }
+  .src .meta { color: var(--muted); font-size: 12px; }
+  .src pre { white-space: pre-wrap; margin: 6px 0 0; font: 12px/1.45 ui-monospace, Consolas, monospace; color: var(--muted); }
+  .fb { margin-top: 8px; display: flex; gap: 6px; }
+  .fb button { border: 1px solid var(--border); background: var(--panel); color: var(--text); border-radius: 6px; padding: 2px 8px; cursor: pointer; }
+  .fb button:disabled { opacity: .5; cursor: default; }
+  form { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg); padding: 12px 16px 20px; border-top: 1px solid var(--border); }
+  form div { max-width: 860px; margin: 0 auto; display: flex; gap: 8px; }
+  input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--text); font: inherit; }
+  form button { padding: 10px 16px; border: 0; border-radius: 8px; background: var(--accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+  .examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .examples button { border: 1px solid var(--border); background: var(--panel); color: var(--text); border-radius: 16px; padding: 4px 12px; cursor: pointer; font: inherit; font-size: 13px; }
+  .stats { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .stat { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; min-width: 140px; }
+  .stat b { display: block; font-size: 22px; }
+  .stat span { color: var(--muted); font-size: 12px; }
+  .gap { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; }
+  .gap h3 { margin: 0 0 4px; font-size: 15px; display: flex; gap: 8px; align-items: baseline; }
+  .count { background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 0 8px; font-size: 12px; }
+  .gap ul { margin: 6px 0 0; padding-left: 18px; color: var(--muted); font-size: 13px; }
+  .gap .meta { color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Ramp-Up Assistant</h1>
+  <nav>
+    <button id="tab-chat" class="active">Ask</button>
+    <button id="tab-gaps">Missing docs</button>
+  </nav>
+  <span id="status"></span>
+</header>
+
+<main id="chat">
+  <div class="a">
+    <p>Hi! Ask me anything about getting started: setup, access, processes. I answer from internal docs and resolved tickets, and I always cite my sources.</p>
+    <div class="examples">
+      <button>Which Node version do I need for Counter?</button>
+      <button>Meu git clone dá "Repository not found", o que eu faço?</button>
+      <button>What is Autopilot and why doesn't it work locally?</button>
+      <button>How do I get kubectl access to staging?</button>
+    </div>
+  </div>
+  <div id="log"></div>
+</main>
+
+<main id="gaps" class="hidden">
+  <div class="stats" id="gap-stats"></div>
+  <div id="gap-list"></div>
+</main>
+
+<form id="ask">
+  <div>
+    <input id="q" placeholder="Ask a question…" autocomplete="off" autofocus>
+    <button>Ask</button>
+  </div>
+</form>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// Minimal markdown: code, bold, italics, lists, paragraphs, [S#] citation chips.
+function md(text) {
+  let h = esc(text)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+    .replace(/(^|\W)_([^_]+)_(\W|$)/g, '$1<i>$2</i>$3')
+    .replace(/\[(S\d+(?:\s*,\s*S\d+)*)\]/g, (_, refs) =>
+      refs.split(/\s*,\s*/).map(r => `<span class="cite" data-ref="${r}">${r}</span>`).join(' '));
+  return h.split(/\n{2,}/).map(block => {
+    const lines = block.split('\n');
+    if (lines.every(l => /^\s*([-*]|\d+\.)\s/.test(l)))
+      return '<ul>' + lines.map(l => `<li>${l.replace(/^\s*([-*]|\d+\.)\s/, '')}</li>`).join('') + '</ul>';
+    return `<p>${lines.join('<br>')}</p>`;
+  }).join('');
+}
+
+async function api(path, body) {
+  const r = await fetch(path, body ? {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)} : {});
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function ask(question) {
+  const log = $('#log');
+  log.insertAdjacentHTML('beforeend', `<div class="msg"><div class="q">${esc(question)}</div></div>`);
+  const box = document.createElement('div');
+  box.className = 'msg';
+  box.innerHTML = '<div class="a"><p><i>Searching docs and tickets…</i></p></div>';
+  log.appendChild(box);
+  box.scrollIntoView({behavior: 'smooth'});
+  try {
+    const r = await api('/api/ask', {question});
+    const sources = r.sources.map(s => `
+      <div class="src ${s.cited ? 'cited' : ''}" id="src-${r.id}-${s.ref}">
+        <div class="stitle">[${s.ref}] ${s.type === 'ticket' ? '🎫' : '📄'} ${esc(s.title)}</div>
+        <div class="meta">${esc(s.location)} · similarity ${s.score.toFixed(2)}${s.cited ? ' · cited' : ''}</div>
+        <pre>${esc(s.text)}</pre>
+      </div>`).join('');
+    const gapNote = r.gap
+      ? `<div class="gapnote">Logged as missing documentation${r.missing_topic ? `: <b>${esc(r.missing_topic)}</b>` : ''}.</div>` : '';
+    box.innerHTML = `<div class="a">${md(r.answer)}${gapNote}
+      <details ${r.sources.some(s => s.cited) ? '' : ''}><summary>Sources (${r.sources.filter(s => s.cited).length} cited, ${r.sources.length} retrieved)</summary>${sources}</details>
+      <div class="fb"><button data-f="up">👍 Helpful</button><button data-f="down">👎 Not helpful</button></div></div>`;
+    box.querySelectorAll('.cite').forEach(el => el.onclick = () => {
+      box.querySelector('details').open = true;
+      document.getElementById(`src-${r.id}-${el.dataset.ref}`)?.scrollIntoView({behavior: 'smooth', block: 'center'});
+    });
+    box.querySelectorAll('.fb button').forEach(b => b.onclick = async () => {
+      await api('/api/feedback', {id: r.id, feedback: b.dataset.f});
+      box.querySelectorAll('.fb button').forEach(x => x.disabled = true);
+      b.textContent += b.dataset.f === 'down' ? ' (logged as a doc gap)' : ' (thanks!)';
+    });
+  } catch (e) {
+    box.innerHTML = `<div class="a"><p>Error: ${esc(e.message)}</p></div>`;
+  }
+}
+
+async function loadGaps() {
+  const {stats, gaps} = await api('/api/gaps');
+  $('#gap-stats').innerHTML = `
+    <div class="stat"><b>${stats.total}</b><span>questions asked</span></div>
+    <div class="stat"><b>${stats.gaps}</b><span>without a good answer</span></div>
+    <div class="stat"><b>${stats.answered_rate === null ? '-' : Math.round(stats.answered_rate * 100) + '%'}</b><span>answered from docs</span></div>
+    <div class="stat"><b>${gaps.length}</b><span>missing topics</span></div>`;
+  $('#gap-list').innerHTML = gaps.length ? gaps.map(g => `
+    <div class="gap">
+      <h3>${esc(g.topic)} <span class="count">${g.count}×</span></h3>
+      <div class="meta">last asked ${new Date(g.last_asked).toLocaleString()} · ${g.reasons.join(', ').replaceAll('_', ' ')}
+        ${g.closest_existing_source ? ` · closest existing: ${esc(g.closest_existing_source)}` : ''}</div>
+      <ul>${g.questions.map(q => `<li>${esc(q)}</li>`).join('')}</ul>
+    </div>`).join('') : '<p>No gaps logged yet. Ask something the docs don\'t cover!</p>';
+}
+
+function show(tab) {
+  $('#chat').classList.toggle('hidden', tab !== 'chat');
+  $('#ask').classList.toggle('hidden', tab !== 'chat');
+  $('#gaps').classList.toggle('hidden', tab !== 'gaps');
+  $('#tab-chat').classList.toggle('active', tab === 'chat');
+  $('#tab-gaps').classList.toggle('active', tab === 'gaps');
+  if (tab === 'gaps') loadGaps();
+}
+$('#tab-chat').onclick = () => show('chat');
+$('#tab-gaps').onclick = () => show('gaps');
+
+$('#ask').onsubmit = e => {
+  e.preventDefault();
+  const q = $('#q').value.trim();
+  if (q) { $('#q').value = ''; ask(q); }
+};
+document.querySelectorAll('.examples button').forEach(b => b.onclick = () => ask(b.textContent));
+
+api('/api/status').then(s => {
+  $('#status').textContent = s.llm ? `${s.chunks} chunks indexed · DeepSeek (${s.model})` : `${s.chunks} chunks indexed · offline mode (no API key)`;
+}).catch(() => $('#status').textContent = 'server not reachable');
+</script>
+</body>
+</html>
